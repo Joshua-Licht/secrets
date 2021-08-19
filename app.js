@@ -5,8 +5,8 @@ require('dotenv').config()
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
-const mongoose = require('mongoose');
-const encrypt = require('mongoose-encryption');       // Lvl 2 encription(added code)
+const mongoose = require('mongoose');  
+const md5 = require('md5');                                   // Hash Function
 
 const app = express();
 
@@ -21,16 +21,10 @@ mongoose.connect("mongodb://localhost:27017/userDB", {
   useNewUrlParser: true, useUnifiedTopology: true
 });
 
-const userSchema = new mongoose.Schema({                // Lvl 2 encription(altered code)
+const userSchema = new mongoose.Schema({                
     email: String,
     password: String
-});
-  
-// Encryption
-userSchema.plugin(encrypt, {                            // Lvl 2 encription(added code)
-    secret: process.env.SECRET, 
-    encryptedFields: ["password"]                       // only encrypts specific fields in array
-});             
+});            
 
 const User = new mongoose.model("User", userSchema);
 
@@ -46,7 +40,7 @@ app.route("/login")
     })
     .post(function(req, res){
         const username = req.body.username;
-        const password = req.body.password;
+        const password = md5(req.body.password);                    // hash
 
         User.findOne({email: username},function(err, foundUser){
             if (err){
@@ -68,7 +62,7 @@ app.route("/register")
     .post(function(req, res){
         const newUser = new User({
             email: req.body.username,
-            password: req.body.password
+            password: md5(req.body.password)                        // hash
         });
     
         newUser.save(function(err){
